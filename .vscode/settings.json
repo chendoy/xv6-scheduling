@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "stat.h": "c",
+        "types.h": "c",
+        "user.h": "c",
+        "defs.h": "c",
+        "stdio.h": "c",
+        "sleeplock.h": "c",
+        "libc-header-start.h": "c"
+    }
+}
