@@ -231,8 +231,6 @@ exit(int status)
   struct proc *p;
   int fd;
 
-  cprintf("exit received: %d\n",status);
-
   curproc->status = status; //assignment 1 task 3
 
   if(curproc == initproc)
@@ -290,10 +288,8 @@ wait(int *status)
       havekids = 1;
       if(p->state == ZOMBIE){
         // Found one.
-        if(status != null) {
-          //cprintf("exited child has: %d\n",p->status);
+        if(status != null) 
           *status = p->status; //collecing child's exit code (assignment 1 task 3)
-        }
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
