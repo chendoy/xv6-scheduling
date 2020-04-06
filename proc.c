@@ -7,7 +7,7 @@
 #include "proc.h"
 #include "spinlock.h"
 
-int get_min_acc(void);
+long long get_min_acc(struct proc *p, int flag);
 void switch_proc(struct proc *p, struct cpu *c);
 int sched_type = 0;
 
@@ -221,7 +221,7 @@ fork(void)
   np->state = RUNNABLE;
 
   // assignment 1 task 4
-  np->accumulator = get_min_acc();
+  np->accumulator = get_min_acc(np, 0);
   np->priority = 5;
 
   release(&ptable.lock);
@@ -346,18 +346,25 @@ scheduler(void)
     if (sched_type == DEFAULT) //round_robin scheduling
     {
         for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-          if(p->state != RUNNABLE)
-            continue;
-          switch_proc(p,c); 
+          if (sched_type != DEFAULT)
+            break;
+          else{
+            if(p->state != RUNNABLE)
+              continue;
+            switch_proc(p,c);
+          }   
       }
        release(&ptable.lock);
     }
     else  {
       if(sched_type == PS) { //priority_scheduling
-      int min_acc = get_min_acc();
         for (p = ptable.proc; p< &ptable.proc[NPROC]; p++){
-          if(p->state == RUNNABLE && p->accumulator == min_acc) {
+          if (sched_type != PS)
+            break;
+          else{
+            if(p->state == RUNNABLE && p->accumulator == get_min_acc(p,1)) {
             switch_proc(p,c);
+            }
           }
         }
         release(&ptable.lock);  
@@ -502,7 +509,7 @@ wakeup1(void *chan)
     if(p->state == SLEEPING && p->chan == chan) {
 
       p->state = RUNNABLE;
-      p->accumulator = get_min_acc();
+      p->accumulator = get_min_acc(p,0);
     }
 
 }
@@ -589,30 +596,47 @@ set_ps_priority(int priority)
 }
 
 int
-policy(int policy_num)
+policy(int policy_id)
 {
-  if(policy_num < 0 || policy_num > 10) {
-    cprintf("Error replacing policy, no such a policy number (%d)\n", policy_num);
+  char *policy_str = 0;
+  if(policy_id < 0 || policy_id > 10) {
+    cprintf("Error replacing policy, no such a policy number (%d)\n", policy_id);
     return -1;
   }
-  sched_type = policy_num;
+
+  switch(policy_id) {
+      case 0:
+          policy_str = "Default Policy";
+      break;
+      case 1:
+          policy_str = "Priority Policy";
+      break;
+      case 2:
+          policy_str = "CFS Policy";
+      break;
+  }
+
+  sched_type = policy_id;
+  cprintf("Policy has been successfully changed to %s\n",policy_str);
   return 1;
 }
 
-int
-get_min_acc()
+long long
+get_min_acc(struct proc *curr_proc, int flag) // flag = 1 -> find actual minimum (no zero)
 {
+  //cprintf("entered get_min_acc \n");
   struct proc *p;
-  int min_acc = myproc()->accumulator;
+  long long min_acc = curr_proc->accumulator;
+  //cprintf(" passed cur_proc->acc \n");
   int met_another = false;
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if((p->state == RUNNABLE || p->state == RUNNING)) {
-      if(p != myproc())
+      if(p != curr_proc)
         met_another = true;
       if(p->accumulator < min_acc)
         min_acc = p->accumulator;
     }
-      if(met_another == false)
+      if(met_another == false && !flag)
         min_acc = 0;
   }
   return min_acc;
