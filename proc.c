@@ -7,6 +7,10 @@
 #include "proc.h"
 #include "spinlock.h"
 
+int get_min_acc(void);
+void switch_proc(struct proc *p, struct cpu *c);
+int sched_type = 0;
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -216,6 +220,10 @@ fork(void)
 
   np->state = RUNNABLE;
 
+  // assignment 1 task 4
+  np->accumulator = get_min_acc();
+  np->priority = 5;
+
   release(&ptable.lock);
 
   return pid;
@@ -326,38 +334,61 @@ wait(int *status)
 void
 scheduler(void)
 {
-  struct proc *p;
+  struct proc *p = 0;
   struct cpu *c = mycpu();
   c->proc = 0;
   
   for(;;){
     // Enable interrupts on this processor.
     sti();
-
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
-
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
-
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
+    if (sched_type == DEFAULT) //round_robin scheduling
+    {
+        for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+          if(p->state != RUNNABLE)
+            continue;
+          switch_proc(p,c); 
+      }
+       release(&ptable.lock);
     }
-    release(&ptable.lock);
+    else  {
+      if(sched_type == PS) { //priority_scheduling
+      int min_acc = get_min_acc();
+        for (p = ptable.proc; p< &ptable.proc[NPROC]; p++){
+          if(p->state == RUNNABLE && p->accumulator == min_acc) {
+            switch_proc(p,c);
+          }
+        }
+        release(&ptable.lock);  
+      }
+      else //completely fair schedular
+      {
+        /* TODO */
+      }
+    }  
 
   }
 }
+
+void
+switch_proc(struct proc *p, struct cpu *c) {
+    // Switch to chosen process.  It is the process's job
+    // to release ptable.lock and then reacquire it
+    // before jumping back to us.
+    c->proc = p;
+    switchuvm(p);
+    p->state = RUNNING;
+
+    swtch(&(c->scheduler), p->context);
+    switchkvm();
+
+    // Process is done running for now.
+    // It should have changed its p->state before coming back.
+    c->proc = 0;
+    
+}
+
 
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
@@ -389,8 +420,12 @@ sched(void)
 void
 yield(void)
 {
+  struct proc *curproc = myproc();
   acquire(&ptable.lock);  //DOC: yieldlock
-  myproc()->state = RUNNABLE;
+  curproc->state = RUNNABLE;
+
+  curproc->accumulator += curproc->priority;
+
   sched();
   release(&ptable.lock);
 }
@@ -464,8 +499,12 @@ wakeup1(void *chan)
   struct proc *p;
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == SLEEPING && p->chan == chan)
+    if(p->state == SLEEPING && p->chan == chan) {
+
       p->state = RUNNABLE;
+      p->accumulator = get_min_acc();
+    }
+
 }
 
 // Wake up all processes sleeping on chan.
@@ -535,4 +574,46 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+int
+set_ps_priority(int priority) 
+{
+  struct proc *curproc = myproc();
+  if(priority < 1 || priority > 10) {
+    cprintf("set_ps_priority failed, cannot change priority to %d\n", priority);
+    return -1;
+  }
+  curproc->priority = priority;
+  return 1;
+}
+
+int
+policy(int policy_num)
+{
+  if(policy_num < 0 || policy_num > 10) {
+    cprintf("Error replacing policy, no such a policy number (%d)\n", policy_num);
+    return -1;
+  }
+  sched_type = policy_num;
+  return 1;
+}
+
+int
+get_min_acc()
+{
+  struct proc *p;
+  int min_acc = myproc()->accumulator;
+  int met_another = false;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if((p->state == RUNNABLE || p->state == RUNNING)) {
+      if(p != myproc())
+        met_another = true;
+      if(p->accumulator < min_acc)
+        min_acc = p->accumulator;
+    }
+      if(met_another == false)
+        min_acc = 0;
+  }
+  return min_acc;
 }

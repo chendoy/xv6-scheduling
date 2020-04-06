@@ -6,6 +6,9 @@
         "defs.h": "c",
         "stdio.h": "c",
         "sleeplock.h": "c",
-        "libc-header-start.h": "c"
+        "libc-header-start.h": "c",
+        "mmu.h": "c",
+        "x86.h": "c",
+        "proc.h": "c"
     }
 }

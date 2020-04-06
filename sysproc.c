@@ -104,3 +104,23 @@ sys_memsize(void)
 {
   return myproc()->sz;
 }
+
+int
+sys_set_ps_priority(void)
+{
+  int priority;
+
+  if(argint(0, &priority) < 0)
+    return -1;
+  return set_ps_priority(priority);
+}
+
+int
+sys_policy(void)
+{
+  int policy_id;
+
+  if(argint(0, &policy_id) < 0)
+    return -1;
+  return policy(policy_id);
+}
