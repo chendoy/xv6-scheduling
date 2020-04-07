@@ -1,3 +1,5 @@
+#include "sched.h"
+
 // Per-CPU state
 struct cpu {
   uchar apicid;                // Local APIC ID
@@ -52,6 +54,10 @@ struct proc {
   int status;                  // exit status code (assignment 1 task 3)
   long long accumulator;       // for priority scheduling
   int priority;                // for priority scheduling
+  float decay_factor;          // for cfs scheduling
+  int rtime;             // running time (cfs scheduling)
+  int stime;             // sleeping time (cfs scheduling)
+  int retime;            // ready time (cfs scheduling)
 };
 
 // Process memory is laid out contiguously, low addresses first:
@@ -59,3 +65,7 @@ struct proc {
 //   original data and bss
 //   fixed-size stack
 //   expandable heap
+
+
+void update_cfs_stats(void);
+struct proc* myproc(void);

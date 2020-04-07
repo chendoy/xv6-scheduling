@@ -9,6 +9,7 @@
 
 long long get_min_acc(struct proc *p, int flag);
 void switch_proc(struct proc *p, struct cpu *c);
+int cfs_ratio (struct proc *curr_proc);
 int sched_type = 0;
 
 struct {
@@ -116,6 +117,10 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
+  // assignment 1 task 4
+  p->accumulator = get_min_acc(p, 0);
+  p->priority = 5;
+
   return p;
 }
 
@@ -153,6 +158,8 @@ userinit(void)
   acquire(&ptable.lock);
 
   p->state = RUNNABLE;
+  
+  p->decay_factor = 1;
 
   release(&ptable.lock);
 }
@@ -220,9 +227,8 @@ fork(void)
 
   np->state = RUNNABLE;
 
-  // assignment 1 task 4
-  np->accumulator = get_min_acc(np, 0);
-  np->priority = 5;
+  //assignment 1 task 4
+  np->decay_factor = curproc->decay_factor;
 
   release(&ptable.lock);
 
@@ -371,10 +377,32 @@ scheduler(void)
       }
       else //completely fair schedular
       {
-        /* TODO */
+        long long min_ratio = MAX_LLONG;
+        struct proc* min_ratio_proc = null;
+        int type_changed = false;
+        for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+          if (sched_type != CFS){
+            type_changed = true;
+            break;
+          }
+          else{
+            if(p->state == RUNNABLE){
+               long long p_cfs_ratio = cfs_ratio(p);
+               if (p_cfs_ratio < min_ratio) {
+                 min_ratio = p_cfs_ratio;
+                 min_ratio_proc = p;
+               }
+            }
+          }
+        }
+        if (type_changed == false){ //validate scheduling type not changed
+            if(min_ratio_proc != null){ //validate we found a runnable process
+                switch_proc(min_ratio_proc,c);
+            }   
+        }
+        release(&ptable.lock);
       }
-    }  
-
+    } 
   }
 }
 
@@ -621,23 +649,124 @@ policy(int policy_id)
   return 1;
 }
 
+int
+set_cfs_priority(int priority)
+{
+  if(priority < 1 || priority > 3) {
+    cprintf("Error changing CFS priority, illegal CFS priority (%d)\n", priority);
+    return -1;
+  }
+  switch (priority) {
+    case 1:
+      myproc()->decay_factor = 0.75;
+    break;
+    case 2:
+    myproc()->decay_factor = 1;
+    break;
+    case 3:
+    myproc()->decay_factor = 1.25;
+    break;
+  }
+  return 0;
+}
+
 long long
 get_min_acc(struct proc *curr_proc, int flag) // flag = 1 -> find actual minimum (no zero)
 {
-  //cprintf("entered get_min_acc \n");
   struct proc *p;
   long long min_acc = curr_proc->accumulator;
-  //cprintf(" passed cur_proc->acc \n");
-  int met_another = false;
+  int not_single_proc = false;
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if((p->state == RUNNABLE || p->state == RUNNING)) {
       if(p != curr_proc)
-        met_another = true;
+        not_single_proc = true;
       if(p->accumulator < min_acc)
         min_acc = p->accumulator;
     }
-      if(met_another == false && !flag)
+      if(not_single_proc == false && !flag)
         min_acc = 0;
   }
   return min_acc;
+}
+
+int
+cfs_ratio (struct proc *curr_proc)
+{
+  int numerator = curr_proc->rtime * curr_proc->decay_factor;
+  int denominator = curr_proc->rtime + (curr_proc->stime + curr_proc->retime);
+  int ratio = numerator / denominator;
+  return ratio;
+}
+
+void
+update_cfs_stats(void) {
+  int i;
+  struct proc *p = 0;
+  for(i = 0; i < NPROC; i++) {
+    p = &ptable.proc[i];
+    switch (p->state) {
+      case RUNNING:
+        p->rtime++;
+      break;
+      case RUNNABLE: 
+        p->retime++;
+      break;
+      case SLEEPING:
+        p->stime++;
+      break;
+      default:
+      break;
+    }
+  } 
+}
+
+int 
+proc_info(struct perf *performance) {
+
+  if(performance == null) 
+    return -1;
+
+  int pid = myproc()->pid;
+  int ps_priority = performance->ps_priority;
+  int stime = performance->stime;
+  int retime = performance->retime;
+  int rtime = performance->rtime;
+
+  cprintf("%d          %d          %d       %d        %d\n", pid, ps_priority, stime, retime, rtime);
+  return 0;
+}
+
+int
+query_perf(int flag) {
+    int ps_priority = -1;
+    float decay_factor = myproc()->decay_factor;
+
+    if(decay_factor == 0.75)
+        ps_priority = 1;
+    else
+    {
+        if(decay_factor == 1.0)
+            ps_priority = 2;
+            else
+            {
+                if(decay_factor == 1.25)
+                    ps_priority = 3;
+            }
+    }
+
+    switch (flag) {
+      case 0:
+        return ps_priority;
+      break;
+      case 1:
+        return myproc()->stime;
+      break;
+      case 2: 
+        return myproc()->retime;
+      break;
+      case 3: 
+        return myproc()->rtime;
+      break;
+    }
+    return -1;
 }

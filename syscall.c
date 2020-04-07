@@ -106,32 +106,38 @@ extern int sys_uptime(void);
 extern int sys_memsize(void);
 extern int sys_set_ps_priority(void);
 extern int sys_policy(void);
+extern int sys_set_cfs_priority(void);
+extern int sys_proc_info(void);
+extern int sys_query_perf(void);
 
 static int (*syscalls[])(void) = {
-[SYS_fork]            sys_fork,
-[SYS_exit]            sys_exit,
-[SYS_wait]            sys_wait,
-[SYS_pipe]            sys_pipe,
-[SYS_read]            sys_read,
-[SYS_kill]            sys_kill,
-[SYS_exec]            sys_exec,
-[SYS_fstat]           sys_fstat,
-[SYS_chdir]           sys_chdir,
-[SYS_dup]             sys_dup,
-[SYS_getpid]          sys_getpid,
-[SYS_sbrk]            sys_sbrk,
-[SYS_sleep]           sys_sleep,
-[SYS_uptime]          sys_uptime,
-[SYS_open]            sys_open,
-[SYS_write]           sys_write,
-[SYS_mknod]           sys_mknod,
-[SYS_unlink]          sys_unlink,
-[SYS_link]            sys_link,
-[SYS_mkdir]           sys_mkdir,
-[SYS_close]           sys_close,
-[SYS_memsize]         sys_memsize,
-[SYS_set_ps_priority] sys_set_ps_priority,
-[SYS_policy]          sys_policy
+[SYS_fork]             sys_fork,
+[SYS_exit]             sys_exit,
+[SYS_wait]             sys_wait,
+[SYS_pipe]             sys_pipe,
+[SYS_read]             sys_read,
+[SYS_kill]             sys_kill,
+[SYS_exec]             sys_exec,
+[SYS_fstat]            sys_fstat,
+[SYS_chdir]            sys_chdir,
+[SYS_dup]              sys_dup,
+[SYS_getpid]           sys_getpid,
+[SYS_sbrk]             sys_sbrk,
+[SYS_sleep]            sys_sleep,
+[SYS_uptime]           sys_uptime,
+[SYS_open]             sys_open,
+[SYS_write]            sys_write,
+[SYS_mknod]            sys_mknod,
+[SYS_unlink]           sys_unlink,
+[SYS_link]             sys_link,
+[SYS_mkdir]            sys_mkdir,
+[SYS_close]            sys_close,
+[SYS_memsize]          sys_memsize,
+[SYS_set_ps_priority]  sys_set_ps_priority,
+[SYS_policy]           sys_policy,
+[SYS_set_cfs_priority] sys_set_cfs_priority,
+[SYS_proc_info]        sys_proc_info,
+[SYS_query_perf]       sys_query_perf
 };
 
 void

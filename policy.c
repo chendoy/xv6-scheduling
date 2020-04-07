@@ -1,7 +1,9 @@
 // assignment 1 task 4
 
+
+#define MIN_POLICY 0
+#define MAX_POLICY 2
 #include "user.h"
-//#include "defs.h"
 
 int
 main(int argc, char *argv[])
@@ -14,7 +16,7 @@ main(int argc, char *argv[])
     else {
         policy_id = atoi(argv[1]);
 
-        if (policy_id < 0 || policy_id > 2){
+        if (policy_id < MIN_POLICY || policy_id > MAX_POLICY){
             printf(1,"Error replacing policy, no such a policy number (%d)\n",policy_id);
             exit(1);
         }

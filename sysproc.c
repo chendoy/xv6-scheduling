@@ -124,3 +124,36 @@ sys_policy(void)
     return -1;
   return policy(policy_id);
 }
+
+int
+sys_set_cfs_priority(void) 
+{
+  int priority;
+
+  if(argint(0, &priority) < 0)
+    return -1;
+
+  return set_cfs_priority(priority);
+}
+
+int
+sys_proc_info(void) {
+  struct perf *performance;
+  int perf_size = sizeof(performance);
+
+  if(argptr(0, (char**)&performance, perf_size) < 0)
+    return -1;
+
+  return proc_info(performance);
+}
+
+int
+sys_query_perf(void) {
+
+  int flag;
+
+  if(argint(0, &flag) < 0)
+    return -1;
+
+  return query_perf(flag);
+}
