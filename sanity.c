@@ -52,6 +52,7 @@ void child_work(void)
     int i = 1000000;
     int dummy = 0;
     while(i--){
+        printf(1,"");
         dummy += i;
     }
 }

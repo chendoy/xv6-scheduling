@@ -120,6 +120,9 @@ found:
   // assignment 1 task 4
   p->accumulator = get_min_acc(p, 0);
   p->priority = 5;
+  p->retime = 0;
+  p->rtime = 0;
+  p-> stime = 0;
 
   return p;
 }
@@ -738,25 +741,10 @@ proc_info(struct perf *performance) {
 
 int
 query_perf(int flag) {
-    int ps_priority = -1;
-    float decay_factor = myproc()->decay_factor;
-
-    if(decay_factor == 0.75)
-        ps_priority = 1;
-    else
-    {
-        if(decay_factor == 1.0)
-            ps_priority = 2;
-            else
-            {
-                if(decay_factor == 1.25)
-                    ps_priority = 3;
-            }
-    }
 
     switch (flag) {
       case 0:
-        return ps_priority;
+        return myproc()->priority;
       break;
       case 1:
         return myproc()->stime;
