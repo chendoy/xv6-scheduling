@@ -121,7 +121,7 @@ found:
   p->accumulator = get_min_acc(p, 0);
   p->priority = 5;
   p->retime = 0;
-  p->rtime = 0;
+  p->rtime = 1;
   p-> stime = 0;
 
   return p;
@@ -370,7 +370,7 @@ scheduler(void)
         for (p = ptable.proc; p< &ptable.proc[NPROC]; p++){
           if (sched_type != PS)
             break;
-          else{
+          else {
             if(p->state == RUNNABLE && p->accumulator == get_min_acc(p,1)) {
             switch_proc(p,c);
             }
@@ -697,6 +697,7 @@ cfs_ratio (struct proc *curr_proc)
 {
   int numerator = curr_proc->rtime * curr_proc->decay_factor;
   int denominator = curr_proc->rtime + (curr_proc->stime + curr_proc->retime);
+  //cprintf("denominator: %d\n",denominator);
   int ratio = numerator / denominator;
   return ratio;
 }

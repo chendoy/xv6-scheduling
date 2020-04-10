@@ -13,8 +13,8 @@ main (int argc, char *argv[]) {
     print_headline();
     if(fork()==0) //child 1, low
     {     
-        set_ps_priority(10);
-        set_cfs_priority(3);
+        set_ps_priority(1);
+        set_cfs_priority(1);
         child_work();
         print_stats();
         exit(0);
@@ -23,8 +23,8 @@ main (int argc, char *argv[]) {
     {
         if(fork()==0) //child 2, medium
         {
-            set_ps_priority(5);
-            set_cfs_priority(2);
+            set_ps_priority(1);
+            set_cfs_priority(1);
             child_work();
             print_stats();
             exit(0);
@@ -49,9 +49,10 @@ main (int argc, char *argv[]) {
 
 void child_work(void) 
 {
-    int i = 1000000;
+    int i = 10000000;
     int dummy = 0;
     while(i--){
+        printf(1,"");
         printf(1,"");
         dummy += i;
     }
