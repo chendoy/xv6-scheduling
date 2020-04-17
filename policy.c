@@ -15,14 +15,8 @@ main(int argc, char *argv[])
     }
     else {
         policy_id = atoi(argv[1]);
-
-        if (policy_id < MIN_POLICY || policy_id > MAX_POLICY){
-            printf(1,"Error replacing policy, no such a policy number (%d)\n",policy_id);
-            exit(1);
-        }
-        else {
-            policy(policy_id);
-            exit(0);
-        }
+        int code = policy(policy_id);
+        exit(code);
+        
     }
 }

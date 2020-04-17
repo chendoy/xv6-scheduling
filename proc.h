@@ -52,12 +52,12 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   int status;                  // exit status code (assignment 1 task 3)
-  long long accumulator;       // for priority scheduling
-  int priority;                // for priority scheduling
+  long long accumulator;       // for ps_priority scheduling
+  int ps_priority;             // for ps_priority scheduling
   float decay_factor;          // for cfs scheduling
-  int rtime;             // running time (cfs scheduling)
-  int stime;             // sleeping time (cfs scheduling)
-  int retime;            // ready time (cfs scheduling)
+  int rtime;                   // running time (cfs scheduling)
+  int stime;                   // sleeping time (cfs scheduling)
+  int retime;                  // ready time (cfs scheduling)
 };
 
 // Process memory is laid out contiguously, low addresses first:

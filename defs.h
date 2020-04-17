@@ -205,12 +205,7 @@ void            clearpteu(pde_t *pgdir, char *uva);
 #define RETIME 2
 #define RTIME 3
 
-
-
 #define MIN_PRIORITY 0
 #define MAX_PRIORITY 2
-
-#define MAX_LLONG 9223372036854775807
-#define MIN_LLONG -9223372036854775807
 
 extern int sched_type;

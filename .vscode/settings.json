@@ -10,6 +10,7 @@
         "mmu.h": "c",
         "x86.h": "c",
         "proc.h": "c",
-        "sched.h": "c"
+        "sched.h": "c",
+        "spinlock.h": "c"
     }
 }

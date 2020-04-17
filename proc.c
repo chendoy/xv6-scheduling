@@ -6,10 +6,11 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include <float.h>
 
 long long get_min_acc(struct proc *p, int flag);
 void switch_proc(struct proc *p, struct cpu *c);
-int cfs_ratio (struct proc *curr_proc);
+double cfs_ratio (struct proc *curr_proc);
 int sched_type = 0;
 
 struct {
@@ -119,7 +120,7 @@ found:
 
   // assignment 1 task 4
   p->accumulator = get_min_acc(p, 0);
-  p->priority = 5;
+  p->ps_priority = 5;
   p->retime = 0;
   p->rtime = 1;
   p-> stime = 0;
@@ -366,7 +367,7 @@ scheduler(void)
        release(&ptable.lock);
     }
     else  {
-      if(sched_type == PS) { //priority_scheduling
+      if(sched_type == PS) { //priority scheduler
         for (p = ptable.proc; p< &ptable.proc[NPROC]; p++){
           if (sched_type != PS)
             break;
@@ -378,9 +379,9 @@ scheduler(void)
         }
         release(&ptable.lock);  
       }
-      else //completely fair schedular
+      else //completely fair scheduler
       {
-        long long min_ratio = MAX_LLONG;
+        double min_ratio = DBL_MAX;
         struct proc* min_ratio_proc = null;
         int type_changed = false;
         for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
@@ -390,7 +391,7 @@ scheduler(void)
           }
           else{
             if(p->state == RUNNABLE){
-               long long p_cfs_ratio = cfs_ratio(p);
+               double p_cfs_ratio = cfs_ratio(p);
                if (p_cfs_ratio < min_ratio) {
                  min_ratio = p_cfs_ratio;
                  min_ratio_proc = p;
@@ -462,7 +463,7 @@ yield(void)
   acquire(&ptable.lock);  //DOC: yieldlock
   curproc->state = RUNNABLE;
 
-  curproc->accumulator += curproc->priority;
+  curproc->accumulator += curproc->ps_priority;
 
   sched();
   release(&ptable.lock);
@@ -622,15 +623,15 @@ set_ps_priority(int priority)
     cprintf("set_ps_priority failed, cannot change priority to %d\n", priority);
     return -1;
   }
-  curproc->priority = priority;
-  return 1;
+  curproc->ps_priority = priority;
+  return 0;
 }
 
 int
 policy(int policy_id)
 {
   char *policy_str = 0;
-  if(policy_id < 0 || policy_id > 10) {
+  if(policy_id < 0 || policy_id > 3) {
     cprintf("Error replacing policy, no such a policy number (%d)\n", policy_id);
     return -1;
   }
@@ -649,7 +650,7 @@ policy(int policy_id)
 
   sched_type = policy_id;
   cprintf("Policy has been successfully changed to %s\n",policy_str);
-  return 1;
+  return 0;
 }
 
 int
@@ -692,16 +693,16 @@ get_min_acc(struct proc *curr_proc, int flag) // flag = 1 -> find actual minimum
   return min_acc;
 }
 
-int
+double
 cfs_ratio (struct proc *curr_proc)
 {
   int numerator = curr_proc->rtime * curr_proc->decay_factor;
   int denominator = curr_proc->rtime + (curr_proc->stime + curr_proc->retime);
-  //cprintf("denominator: %d\n",denominator);
-  int ratio = numerator / denominator;
+  double ratio = numerator / denominator;
   return ratio;
 }
 
+// lock on ptable here?
 void
 update_cfs_stats(void) {
   int i;
@@ -745,7 +746,7 @@ query_perf(int flag) {
 
     switch (flag) {
       case 0:
-        return myproc()->priority;
+        return myproc()->ps_priority;
       break;
       case 1:
         return myproc()->stime;
