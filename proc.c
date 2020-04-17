@@ -162,9 +162,8 @@ userinit(void)
   acquire(&ptable.lock);
 
   p->state = RUNNABLE;
-  
   p->decay_factor = 1;
-
+  
   release(&ptable.lock);
 }
 
@@ -696,9 +695,12 @@ get_min_acc(struct proc *curr_proc, int flag) // flag = 1 -> find actual minimum
 double
 cfs_ratio (struct proc *curr_proc)
 {
+  double ratio;
   int numerator = curr_proc->rtime * curr_proc->decay_factor;
   int denominator = curr_proc->rtime + (curr_proc->stime + curr_proc->retime);
-  double ratio = numerator / denominator;
+  ratio = denominator;
+  if(denominator != 0)
+    ratio = numerator / ratio;
   return ratio;
 }
 

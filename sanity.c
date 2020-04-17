@@ -9,7 +9,7 @@ void child_work(void);
 void print_stats(void);
 
 int
-main2 (int argc, char *argv[]) {
+main (int argc, char *argv[]) {
     print_headline();
     if(fork()==0) //child 1, low
     {     
@@ -53,7 +53,6 @@ void child_work(void)
     int dummy = 0;
     while(i--){
         printf(1,"");
-        printf(1,"");
         dummy += i;
     }
 }
@@ -74,7 +73,7 @@ void print_headline(void) {
 }
 
 int
-main(int argc, char *argv[])
+main2(int argc, char *argv[])
 {
   int ps_prt, cfs_prt, pid;
   struct perf p;
